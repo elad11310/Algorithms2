@@ -1,4 +1,6 @@
-
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
 
 /**
  * this class represents bottles problem which converted to a graph
@@ -24,47 +26,181 @@
  * vertex - mat[i,j] = mat[i,k] && mat[k,j] || mat[i,j],on the same hand we will make another matrix with all the vertexes courses.
  * isConnected - checks if the graph is connected - means we can reach any vertex in the graph.
  * numOfConnectingComponents - checks how many connecting components in the graph.
- * checkWay - checks if there is a way between two vertexes and returns the way (enter number not by modeling to bottles problem,by normal numbers 0,1,2,3... - instead of (0,0) -> 0)
+ * printCourse - checks if there is a way between two vertexes and returns the way ,invoke it with true so it will return a course in the bottle problem style, invoke with false-
+ * it will return a course in just numbers of vertexes.
+ * <p>
+ * adding more functions:(these functions not connected to the bottle problem directly, we relay on that we got already a neighbours matrix with
+ * values on the edges.
+ * findCheapestWay - gets a neighbours matrix and returns a matrix with cheapest way(in value,not a course) between vertexes (if exists).
+ * bottlesProblemCheapestWay - like findCheapestWay but in the bottle problem graph style
+ * <p>
+ * another problem we gonna deal with - a graph that the weights are on the vertexes and not on the edges. we get as input a matrix that will describe the neighbours
+ * marked by ones . and another arr for the weights that should be on vertexes and then we convert it to the problem we had before - finding cheapest ways between vertexes
+ * by the weights on the edges. so we gonna convert the weights from vertexes to the edges. we gonna face a problem that when we calculate the distance besides the vertexes
+ * that on the end of both sides each one counts twice which is wrong so we gonna add the vertexes from the end so all vertexes eventually counts twice and then divide by two.
+ * <p>
+ * findCheapestWayVertex - will make the text depicted above. 1) convert. 2)FW finding all the cheapest ways. 3)fixing the problem that all vertexes except those in the end
+ * count twice.
+ * <p>
+ * if we are not interested in all the vertexes cheapest ways but only from one vertex - all the cheapest ways to the rest of the vertexes,
+ * we will use algorithm Dijstra.
  */
+
+
+// for Dijstra algorithm
+class Node {
+    boolean isConnected;
+    boolean isVisited;
+    int cost;
+    int edge;
+
+    public Node(boolean isConnected, boolean isVisited, int cost, int edge) {
+        this.isConnected = isConnected;
+        this.isVisited = isVisited;
+        this.cost = cost;
+        this.edge = edge;
+    }
+}
 
 
 public class BottlesProblem {
     static int n = 5, m = 3;
     static int size = (m + 1) * (n + 1);
-    static String ways[][] = new String[size][size];
+    //static int size = 6;
+    static String ways[][] = new String[size][size]; // for all the ways between vertexes
+    static String[][] cheapestWays = new String[size][size]; // for all the cheapest ways between vertexes.
 
 
     public static void main(String[] args) {
+//        Integer mat[][] = {{1, 10000, 1, 1, 10000, 10000},
+//                {1, 1, 1, 1, 1, 10000},
+//                {1, 10000, 1, 10000, 1, 1},
+//                {1, 1, 10000, 1, 10000, 1},
+//                {10000, 1, 1, 1, 1, 1},
+//                {10000, 10000, 1, 1, 10000, 1}};
+//
+//        mat = findCheapestWay(mat);
+//        printAll(mat);
+//        System.out.println("---------");
+//        printAll(cheapestWays);
+//        try {
+//            Node[] arr = Dijstra(8);
+//            for (Node s : arr) {
+//                if (s != null)
+//                    System.out.print(s.cost + " ");
+//            }
+//        } catch (FileNotFoundException e) {
+//            e.printStackTrace();
+//        }
 
-//        Boolean check [][] = {{true,false,false,true,false,true,false},
-//                {false,true,true,false,true,false,true},
-//                {false,true,true,false,true,false,true},
-//                {true,false,false,true,false,true,false},
-//                {false,true,true,false,true,false,true},
-//                {true,false,false,true,false,true,false},
-//                {false,true,true,false,true,false,true}
+
+        // input matrix with edges value
+//        Integer mat[][] = {{0, 1, 10000, 3},
+//                {1, 0, 11, 10000},
+//                {10000, 11, 0, 5},
+//                {3, 10000, 5, 0}};
+
+//        Integer mat [][] = {{0,9,5,10000,10000,10000,10000},
+//                {9,0,10000,2,10000,10000,10000},
+//                {5,10000,0,1,10000,10000,10000},
+//                {10000,2,1,0,13,2,10000},
+//                {10000,10000,10000,13,0,10000,6},
+//                {10000,10000,10000,2,10000,0,4},
+//                {10000,10000,10000,10000,6,4,0}};
+//
+//        mat = findCheapestWay(mat);
+//        printAll(mat);
+//        System.out.println("----------");
+//        printAll(cheapestWays);
+
+
+//        Boolean check[][] = {{true, false, false, true, false, true, false},
+//                {false, true, true, false, true, false, true},
+//                {false, true, true, false, true, false, true},
+//                {true, false, false, true, false, true, false},
+//                {false, true, true, false, true, false, true},
+//                {true, false, false, true, false, true, false},
+//                {false, true, true, false, true, false, true}
+//        };
+//
+//        Boolean check2[][] = {{true, false, false, true, false, true, false},
+//                {false, true, true, false, true, false, true},
+//                {false, true, true, false, true, false, true},
+//                {true, false, false, true, false, true, false},
+//                {false, true, true, false, true, false, true},
+//                {true, false, false, true, false, true, false},
+//                {false, true, true, false, true, false, true}
 //        };
 
-        Boolean neighbourMat[][] = bottlesProblem();
-        System.out.println("Neighbour matrix");
-        printAll(neighbourMat);
+//        Integer temp[][] = bottlesProblemCheapestWay();
+//        System.out.println("Neighbour matrix");
+//        printAll(temp);
+//        temp = findCheapestWay(temp, true);
+//        System.out.println("---------");
+//        printAll(cheapestWays);
+
+
         Boolean checkConnections[][] = bottlesProblem();
-        checkConnections = findWaysFW(checkConnections, neighbourMat);
+        System.out.println("Neighbour matrix");
+        printAll(checkConnections);
+        checkConnections = findWaysFW(checkConnections);
+        //Boolean[][] checkConnections = findWaysFW(check, check2);
         System.out.println("Courses matrix");
         printAll(checkConnections);
         System.out.println();
         printAll(ways);
-        System.out.println();
-        System.out.println("Graph connected : " + isConnected(checkConnections));
-        System.out.println();
-         System.out.println(checkWay(checkConnections, 6, 4));
-        System.out.println("Num of connecting component : " + numOfConnectingComponents(checkConnections));
+//        System.out.println();
+//        System.out.println("Graph connected : " + isConnected(checkConnections));
+//        System.out.println();
+//        System.out.println(printCourse(checkConnections, 0, 4, true));
+//        System.out.println("Num of connecting component : " + numOfConnectingComponents(checkConnections));
 
     }
 
-    private static int numOfConnectingComponents(Boolean[][] mat) {
+    private static Integer[][] findCheapestWayVertex(Integer[][] mat, int[] arr) {
+        // step 1: convert the weights on vertexes to weights on edges.
         int i, j;
-        boolean anotherConnection=false; // to know if there is a new connection component
+
+        System.out.println("After converting");
+        for (i = 0; i < mat.length; i++) {
+            for (j = 0; j < mat[0].length; j++) {
+                // if its not diagnoal
+                if (i != j && mat[i][j] != 10000) {
+                    mat[i][j] = arr[i] + arr[j];
+                }
+            }
+        }
+
+        printAll(mat);
+
+        //step 2 : lunching FW algorithm to find cheapest ways.
+        System.out.println("After lunching FW");
+        mat = findCheapestWay(mat, true);
+        System.out.println();
+        printAll(mat);
+        System.out.println();
+        printAll(cheapestWays);
+
+        // step 3 : fixing the matrix with the cheapest ways values.
+        System.out.println("After fixing");
+        for (i = 0; i < mat.length; i++) {
+            for (j = 0; j < mat[0].length; j++) {
+                if (i != j) {
+                    mat[i][j] += arr[i] + arr[j];
+                    mat[i][j] /= 2;
+                }
+            }
+        }
+
+        printAll(mat);
+
+        return mat;
+    }
+
+    private static int numOfConnectingComponents(Boolean[][] mat) {
+        String ans = "{"; // for printing each connection component.
+        int i, j;
+        boolean anotherConnection = false; // to know if there is a new connection component
         int count = 0; // to count how many components
         int notEmpty = 0; // to know if its not the connection we already defined before.
 
@@ -79,15 +215,23 @@ public class BottlesProblem {
                 if (mat[i][j]) {
                     if (arr[j] == -1) {
                         notEmpty++;
-                        anotherConnection=true;
+                        anotherConnection = true;
+                        ans += j + ",";
                     }
                     arr[j] = i;
                 }
             }
-            if (anotherConnection) {
+            if (anotherConnection) { // means there is a connection component.
                 count++;
-                anotherConnection=false;
+                anotherConnection = false;
+
+                // this for printing this connection component.
+                ans = ans.substring(0, ans.length() - 1);
+                ans += "}";
+                System.out.println("Connecting component number " + count + " " + ans);
+                ans = "{";
             }
+            // if all the arr values are different from -1 so we found all the connections components .
             if (notEmpty == size) {
                 return count;
             }
@@ -97,9 +241,13 @@ public class BottlesProblem {
         return 0;
     }
 
-    private static String checkWay(Boolean[][] mat, int i, int j) {
+    private static String printCourse(Boolean[][] mat, int i, int j, boolean form) {
         String ans = "";
         if (mat[i][j]) { // if there is a way
+            // means we want to return a course by the bottle problem
+            if (form) {
+                return ways[i][j];
+            }
             String vertex[] = ways[i][j].split(" -> ");
             for (int k = 0; k < vertex.length; k++) {
                 // converting the ordered pair to k
@@ -123,9 +271,11 @@ public class BottlesProblem {
         return true;
     }
 
-    private static Boolean[][] findWaysFW(Boolean[][] checkConnections, Boolean[][] neighbourMat) {
+    private static Boolean[][] findWaysFW(Boolean[][] checkConnections) {
         int p, l, g, q;
-
+        // making a helping mat.
+        Boolean[][] neighbourMat = new Boolean[checkConnections.length][checkConnections.length];
+        deepCopy(checkConnections, neighbourMat);
 
         // O(n^3)
         for (int k = 0; k < size; k++) {
@@ -139,8 +289,9 @@ public class BottlesProblem {
                     q = j % (n + 1);
 
                     // checks if there is any vertex k that connects between i and j or they are already connected by one edge
-                    checkConnections[i][j] = (checkConnections[i][k] && checkConnections[k][j]) || checkConnections[i][j];
+                    checkConnections[i][j] = checkConnections[i][j] || (checkConnections[i][k] && checkConnections[k][j]);
 
+                    // now saving a way
                     if (neighbourMat[i][j] && ways[i][j] == null) { // means we already have a course by 1 edge
                         ways[i][j] = "(" + p + "," + l + ") -> (" + g + "," + q + ")";
                     } else if (checkConnections[i][k] && checkConnections[k][j] && !neighbourMat[i][j]) { // if there is  more then one  edge course
@@ -167,6 +318,18 @@ public class BottlesProblem {
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 mat[i][j] = checkNeighbours(i, j);
+            }
+        }
+
+        return mat;
+    }
+
+    private static Integer[][] bottlesProblemCheapestWay() {
+
+        Integer[][] mat = new Integer[size][size];
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                mat[i][j] = checkNeighbours(i, j) ? 1 : 10000;
             }
         }
 
@@ -216,4 +379,143 @@ public class BottlesProblem {
             System.out.println();
         }
     }
+
+    private static <T> void deepCopy(T[][] from, T[][] to) {
+
+        for (int i = 0; i < from.length; i++) {
+            for (int j = 0; j < from.length; j++) {
+                to[i][j] = from[i][j];
+            }
+
+        }
+    }
+
+    private static Integer[][] findCheapestWay(Integer mat[][], boolean form) {
+        int p, l, g, q;
+        Integer newMat[][] = new Integer[mat.length][mat.length];
+        deepCopy(mat, newMat);
+
+        // O(n^3)
+        for (int k = 0; k < size; k++) {
+            for (int i = 0; i < size; i++) {
+                for (int j = 0; j < size; j++) {
+                    mat[i][j] = MIN(mat[i][j], mat[i][k] + mat[k][j]);
+                    // p,i ordered pair of i
+                    p = i / (n + 1);
+                    l = i % (n + 1);
+                    // g,q ordered pair of j
+                    g = j / (n + 1);
+                    q = j % (n + 1);
+
+                    // now saving the cheapest ways
+
+                    if ((newMat[i][j] != 0 && newMat[i][j] != 10000) && cheapestWays[i][j] == null) { // means we already have a course by 1 edge
+                        if (form) { // to know if to save the ways as bottle problem
+                            cheapestWays[i][j] = "(" + p + "," + l + ")" + " -> (" + g + "," + q + ")";
+                        } else
+                            cheapestWays[i][j] = "" + i + " -> " + j + "";
+                    } else if (mat[i][j] != 0 && mat[i][j] != 10000) { // if there is  more then one  edge course
+                        if (cheapestWays[i][j] == null && (newMat[i][j] == 0 || newMat[i][j] == 10000)) {
+                            cheapestWays[i][j] = cheapestWays[i][k] + " -> " + cheapestWays[k][j].substring(9);
+                            newMat[i][j] = newMat[i][k] + newMat[k][j];
+                        } else if (mat[i][k] + mat[k][j] < newMat[i][j]) {
+                            cheapestWays[i][j] = cheapestWays[i][k] + " -> " + cheapestWays[k][j].substring(9);
+                            newMat[i][j] = newMat[i][k] + newMat[k][j];
+                        }
+
+                    }
+
+                }
+
+
+            }
+
+        }
+        return mat;
+    }
+
+    private static Node[] Dijstra(int v1) throws FileNotFoundException {
+        int count = 0, current, min = 10000000;
+        // first reading data from file
+        int i = 0, j = 0;
+        int size = 9;
+        Node[][] mat = new Node[size][size];
+        File file = new File("Nodes.txt");
+        Scanner sc = new Scanner(file);
+
+
+        while (sc.hasNextLine()) {
+            String temp[] = sc.nextLine().split(",");
+
+            mat[i][j] = new Node(Boolean.parseBoolean(temp[0]), Boolean.parseBoolean(temp[1]), Integer.parseInt(temp[2]), Integer.parseInt(temp[3]));
+            j++;
+            if (j == size) {
+                i++;
+                j = 0;
+            }
+            if (i == size) {
+                break;
+            }
+        }
+
+
+        // creating arr of ways from v1 to each vertex on graph.
+        Node[] courses = new Node[size];
+        for (i = 0; i < size; i++) {
+            courses[i] = new Node(false, false, 10000, 0);
+            // start from this node.
+            if (i == v1) {
+                courses[i].isVisited = true;
+                courses[i].cost = 0;
+            }
+        }
+
+        current = v1;
+        // now starting the algorithm
+        while (count != size) {
+            // checking on the neighbours of this node.
+            for (i = 0; i < mat[current].length; i++) {
+                // means its a connected neighbour we havent visited yet.
+                if (i != current && mat[current][i].isVisited == false && mat[current][i].isConnected && courses[i].isVisited == false) {
+                    if (courses[i].cost == 10000) {
+                        courses[i].cost = mat[current][i].edge + courses[current].cost;
+                    }
+                    // means we reached this node from another one, and now we want to see which way its cheaper
+                    else {
+                        if (courses[current].cost + mat[current][i].edge < courses[i].cost) {
+                            courses[i].cost = courses[current].cost + mat[current][i].edge;
+                        }
+                    }
+
+
+                }
+            }
+            // mark that this node was visited
+            count++;
+            courses[current].isVisited = true;
+            // the next neighbour with the minimum cost
+            current = findMin(courses);
+
+        }
+
+        return courses;
+
+    }
+
+    private static int findMin(Node[] courses) {
+        // this function returns the minimum cost node to continue with the dijstra algorithm
+        int min = 10000;
+        for (int i = 0; i < courses.length; i++) {
+            if (!courses[i].isVisited) {
+                if (min == 10000) {
+                    min = i;
+                } else if (courses[i].cost < courses[min].cost) {
+                    min = i;
+                }
+
+            }
+        }
+        return min;
+    }
+
 }
