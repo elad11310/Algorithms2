@@ -1,5 +1,6 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.PriorityQueue;
 import java.util.Scanner;
 
 /**
@@ -43,16 +44,37 @@ import java.util.Scanner;
  * count twice.
  * <p>
  * if we are not interested in all the vertexes cheapest ways but only from one vertex - all the cheapest ways to the rest of the vertexes,
- * we will use algorithm Dijstra.
+ * we will use algorithm Dijkstra.(Disadvantage of Dijkstra is usability to take care of negative weights).
+ * Negative weights : in undirected graph its enough if we have 1 negative weight on any edge then we have(or can have) negative circle. in O(m) we can know that.
+ * (running through all the weights of the edges in the graph).
+ *
+ * in directed graph we will lunch FW algorithm and if we have negative weights on the diagonal it means we have a negative circle.
+ * if we want to show the negative circle we go to the course matrix at this point.
+ * diameter(koter) in the graph is sub sequence of the arr(arr of the edges weight) with the maximum value.
+ * for know we show 2 ways to find it - full search in O(n**3) , dynamic search in O(n**2)
+ * full search- in full search we gonna split the arr to all its sub cells it means : [0,0],[0,1],,,,[0,n]
+ *                                                                                           [1,1],[1,2],,,[1,n]
+ *                                                                                              .
+ *                                                                                                .
+ *                                                                                                  .
+ *                                                                                                    .
+*                                                                                                        [n,n]
+ * so we just need to take care of the triangle above the diagonal becuase its should be a continuous sequence ( not 1,3,5 for instance). so O(n(n-1)/2) -> O(n**2)
+ * so O(n**2) to find all the sub sequences * O(n) to calculate the sum so till now O(n**3)
+ * Dynamic search - open matrix - putting in the diagonal the arr values and then use : mat[i,j] = mat[i,j-1] +mat [j,j] or mat[i,j] = mat[i-1,j] +mat [i,i]
+ * need to be check what is faster way (mat [i,i] or mat [j,j] could be replaced to arr[j] or arr[i]) maybe access to arr is faster then mat - need to be check).
+ * findDiameterFullSearch
+ * findDiameterDynamic
  */
 
 
-// for Dijstra algorithm
+
+// for Dijkstra algorithm
 class Node {
     boolean isConnected;
     boolean isVisited;
-    int cost;
-    int edge;
+    int cost; // total cost till this node
+    int edge; // the edge connecting between the node to its neighbour
 
     public Node(boolean isConnected, boolean isVisited, int cost, int edge) {
         this.isConnected = isConnected;
@@ -64,7 +86,7 @@ class Node {
 
 
 public class BottlesProblem {
-    static int n = 5, m = 3;
+    static int n = 2, m = 1;
     static int size = (m + 1) * (n + 1);
     //static int size = 6;
     static String ways[][] = new String[size][size]; // for all the ways between vertexes
@@ -72,6 +94,11 @@ public class BottlesProblem {
 
 
     public static void main(String[] args) {
+
+
+        int arr1 [] ={3,-5,2,10,-1,8};
+        int ans = findDiameterDynamic(arr1);
+
 //        Integer mat[][] = {{1, 10000, 1, 1, 10000, 10000},
 //                {1, 1, 1, 1, 1, 10000},
 //                {1, 10000, 1, 10000, 1, 1},
@@ -84,7 +111,7 @@ public class BottlesProblem {
 //        System.out.println("---------");
 //        printAll(cheapestWays);
 //        try {
-//            Node[] arr = Dijstra(8);
+//            Node[] arr = Dijkstra(0);
 //            for (Node s : arr) {
 //                if (s != null)
 //                    System.out.print(s.cost + " ");
@@ -139,16 +166,16 @@ public class BottlesProblem {
 //        System.out.println("---------");
 //        printAll(cheapestWays);
 
-
-        Boolean checkConnections[][] = bottlesProblem();
-        System.out.println("Neighbour matrix");
-        printAll(checkConnections);
-        checkConnections = findWaysFW(checkConnections);
-        //Boolean[][] checkConnections = findWaysFW(check, check2);
-        System.out.println("Courses matrix");
-        printAll(checkConnections);
-        System.out.println();
-        printAll(ways);
+//
+//        Boolean checkConnections[][] = bottlesProblem();
+//        System.out.println("Neighbour matrix");
+//        printAll(checkConnections);
+//        checkConnections = findWaysFW(checkConnections);
+//        //Boolean[][] checkConnections = findWaysFW(check, check2);
+//        System.out.println("Courses matrix");
+//        printAll(checkConnections);
+//        System.out.println();
+//        printAll(ways);
 //        System.out.println();
 //        System.out.println("Graph connected : " + isConnected(checkConnections));
 //        System.out.println();
@@ -157,8 +184,56 @@ public class BottlesProblem {
 
     }
 
+    private static int findDiameterDynamic(int [] weights){
+        int i,j,max=0,numOfEdges=0;
+        int dynamicMat [][]  = new int [weights.length][weights.length];
+        // now putting the values from the weights arr into the diagonal O(n)
+        for(i=0;i<weights.length;i++){
+            dynamicMat[i][i]=weights[i];
+            // starting looking for max from now
+            if(weights[i]>max){
+                max = weights[i];
+                numOfEdges = 1;
+            }
+        }
+
+        // now first algorithm  mat[i,j] = mat[i,j-1] +mat [j,j] O(n**2)
+        for(i=0;i<dynamicMat.length-1;i++){
+            for(j=i+1;j<dynamicMat[i].length;j++){
+                dynamicMat[i][j] = dynamicMat[i][j-1] + dynamicMat[j][j];
+                if(dynamicMat[i][j]>max){
+                    max =dynamicMat[i][j];
+                    numOfEdges = Math.abs(i-j)+1;
+                }
+            }
+        }
+        System.out.println("The diameter is " + max + " and in num of edges :" + numOfEdges);
+        return  max;
+    }
+    private static int findDiameterFullSearch(int [] weights){
+        int sum=0,maxSum=0,numOfEdges=0;
+        for(int i=0;i<weights.length;i++){
+            for(int j=i;j<weights.length;j++){
+                sum = Sum(weights,i,j);
+                if(sum>maxSum){
+                    maxSum=sum;
+                    numOfEdges = Math.abs(i-j)+1;
+                }
+
+            }
+        }
+        System.out.println("The diameter is " + maxSum + " and in num of edges :" + numOfEdges);
+        return maxSum;
+    }
+    private static int Sum(int [] arr,int i,int j){
+        int sum=0;
+        for(int k=i;k<=j;k++){
+            sum+=arr[k];
+        }
+        return sum;
+    }
     private static Integer[][] findCheapestWayVertex(Integer[][] mat, int[] arr) {
-        // step 1: convert the weights on vertexes to weights on edges.
+        // step 1: convert the weights on vertexes to weights on edges. O(n**2)
         int i, j;
 
         System.out.println("After converting");
@@ -173,7 +248,7 @@ public class BottlesProblem {
 
         printAll(mat);
 
-        //step 2 : lunching FW algorithm to find cheapest ways.
+        //step 2 : lunching FW algorithm to find cheapest ways.O(n**3)
         System.out.println("After lunching FW");
         mat = findCheapestWay(mat, true);
         System.out.println();
@@ -181,7 +256,7 @@ public class BottlesProblem {
         System.out.println();
         printAll(cheapestWays);
 
-        // step 3 : fixing the matrix with the cheapest ways values.
+        // step 3 : fixing the matrix with the cheapest ways values. O(n**2)
         System.out.println("After fixing");
         for (i = 0; i < mat.length; i++) {
             for (j = 0; j < mat[0].length; j++) {
@@ -193,7 +268,7 @@ public class BottlesProblem {
         }
 
         printAll(mat);
-
+        // total complexity : O(n**2) + O(n**3) + O(n**2) = O(n**3)
         return mat;
     }
 
@@ -434,11 +509,12 @@ public class BottlesProblem {
         return mat;
     }
 
-    private static Node[] Dijstra(int v1) throws FileNotFoundException {
+    private static Node[] Dijkstra(int v1) throws FileNotFoundException {
         int count = 0, current, min = 10000000;
         // first reading data from file
         int i = 0, j = 0;
         int size = 9;
+        // creating nodes neighbour matrix
         Node[][] mat = new Node[size][size];
         File file = new File("Nodes.txt");
         Scanner sc = new Scanner(file);
@@ -457,6 +533,12 @@ public class BottlesProblem {
                 break;
             }
         }
+
+
+
+        PriorityQueue<Integer> pQueue = new PriorityQueue();
+
+
 
 
         // creating arr of ways from v1 to each vertex on graph.
@@ -503,7 +585,7 @@ public class BottlesProblem {
     }
 
     private static int findMin(Node[] courses) {
-        // this function returns the minimum cost node to continue with the dijstra algorithm
+        // this function returns the minimum cost node to continue with the dijkstra algorithm
         int min = 10000;
         for (int i = 0; i < courses.length; i++) {
             if (!courses[i].isVisited) {
