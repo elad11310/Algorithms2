@@ -1,5 +1,7 @@
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.PriorityQueue;
 import java.util.Scanner;
 
@@ -45,28 +47,66 @@ import java.util.Scanner;
  * <p>
  * if we are not interested in all the vertexes cheapest ways but only from one vertex - all the cheapest ways to the rest of the vertexes,
  * we will use algorithm Dijkstra.(Disadvantage of Dijkstra is usability to take care of negative weights).
+ * <p>
  * Negative weights : in undirected graph its enough if we have 1 negative weight on any edge then we have(or can have) negative circle. in O(m) we can know that.
  * (running through all the weights of the edges in the graph).
- *
+ * <p>
  * in directed graph we will lunch FW algorithm and if we have negative weights on the diagonal it means we have a negative circle.
  * if we want to show the negative circle we go to the course matrix at this point.
+ * <p>
+ * <p>
  * diameter(koter) in the graph is sub sequence of the arr(arr of the edges weight) with the maximum value.
- * for know we show 2 ways to find it - full search in O(n**3) , dynamic search in O(n**2)
+ * for know we show 3 ways to find it - full search in O(n**3) , dynamic search in O(n**2)
  * full search- in full search we gonna split the arr to all its sub cells it means : [0,0],[0,1],,,,[0,n]
- *                                                                                           [1,1],[1,2],,,[1,n]
+ *                                                                                          [1,1],[1,2],,,[1,n]
  *                                                                                              .
- *                                                                                                .
- *                                                                                                  .
- *                                                                                                    .
-*                                                                                                        [n,n]
+ *                                                                                                   .
+ *                                                                                                      .
+ *                                                                                                           .
+ *                                                                                                               [n,n]
  * so we just need to take care of the triangle above the diagonal becuase its should be a continuous sequence ( not 1,3,5 for instance). so O(n(n-1)/2) -> O(n**2)
  * so O(n**2) to find all the sub sequences * O(n) to calculate the sum so till now O(n**3)
  * Dynamic search - open matrix - putting in the diagonal the arr values and then use : mat[i,j] = mat[i,j-1] +mat [j,j] or mat[i,j] = mat[i-1,j] +mat [i,i]
  * need to be check what is faster way (mat [i,i] or mat [j,j] could be replaced to arr[j] or arr[i]) maybe access to arr is faster then mat - need to be check).
+ * <p>
+ * patient greedy algorithm - O(n)
+ * if we want to find the smallest sum of sub arr , we will use patient algorithm with a few changes-
+ * we will switch the sign of very variable in the arr (O(n)), call findDiameterGreedy and on the result we put a negative sign.
+ * <p>
  * findDiameterFullSearch
  * findDiameterDynamic
+ * findDiameterGreedy (also called best)
+ *
+ *
+ * now we will see some algorithms to find the diameter in circled graph which means we get a circled arr.
+ * for instance {-6,3-10,100,-18,20,-2} - the diameter is 105 we start summing from index 6 until index 4 20+(-2)+(-6)+3+(-10)+100 = 105.
+ * the maximum edges we can sum is until 1 before the index we started from, because its not allowed to sum an edge twice.
+ *
+ * full search - now i can be greater then j for example arr[6,4] must be count. before where the graph wasn't a cycled graph a[6,4] wasn't allowed because
+ * it was'nt a proper sub arr, now it is.
+ *
+ * [0,0],[0,1],,,,[0,n]
+ * [1,1].......[1,n][1,0]
+ * [2,2].......[2,n][2,0][2,1]
+ * [i,i].......[i,n][i,0]....[i,i-1]
+ * findDiameterCircledGraphFullSearch - O(n**2) to find all sub arr and multiply by another O(n) to sum all the numbers in the current sub arr so total O(n**3).
+ *
+ *  another algorithm (best for my opinion) to duplicate the arr and to use findDiameterGreedy(O(n)) but with a restriction to search for parts that are no longer then
+ *  the size of the original arr. duplicateArrFindDiameter total: O(n)
+ *
+ *
+ *  another algorithm is based on symmetric that as follow : Diameter = Max(best(A) , sum(A) -- best(-A)) -- will be +. O(n)
+ *  findDiameterSymmetric
+ *
+ *
+ * new subject - gas station problem. we have a circle with points. each point is a gas station where we can fill gas.
+ * now we want to check if we can start from a certain point and close a circle. between point to point we have a cost.
+ * so we basically have 2  arr's , 1 for the gas station (each variable represents num of liters we can fill),second arr is for the costs between
+ * point to point. is there a way to close a circle in O(n)? the idea is (if a means gas stations and b means costs) to check if
+ * a1>b1 and then a1+a2>b1+b2 and .... why not to make sum of first array(Gas statiosn) and sum of second array(costs) and then to see if sum(a) > sum(b)?
+ * because the total sum might be greater but in the way we might have a course where the fuel we have at the moment is not enough to get from ai to ai+1.
+ * gasStationProblem
  */
-
 
 
 // for Dijkstra algorithm
@@ -96,10 +136,12 @@ public class BottlesProblem {
     public static void main(String[] args) {
 
 
-        int arr1 [] ={3,-5,2,10,-1,8};
-        int ans = findDiameterDynamic(arr1);
 
-//        Integer mat[][] = {{1, 10000, 1, 1, 10000, 10000},
+        int arr1[] =  {12,1,3,3,4,8};
+        int arr2 [] ={6,4,2,9,3,5};
+        System.out.println(gasStationProblem(arr1,arr2));
+
+        //        Integer mat[][] = {{1, 10000, 1, 1, 10000, 10000},
 //                {1, 1, 1, 1, 1, 10000},
 //                {1, 10000, 1, 10000, 1, 1},
 //                {1, 1, 10000, 1, 10000, 1},
@@ -184,40 +226,181 @@ public class BottlesProblem {
 
     }
 
-    private static int findDiameterDynamic(int [] weights){
-        int i,j,max=0,numOfEdges=0;
-        int dynamicMat [][]  = new int [weights.length][weights.length];
+
+    private static int duplicateArrFindDiameter(int [] weights){
+        int newArr[] = new int [weights.length*2];
+        int j=0;
+        // duplicate the original arr to the new arr
+        for(int i=0;i<newArr.length;i++){
+            if(j==weights.length){
+                j=0;
+            }
+            newArr[i]=weights[j];
+            j++;
+        }
+
+        int ans = findDiameterGreedy(newArr,true,true);
+        return  1;
+
+    } /// suspended for now
+
+    private static boolean gasStationProblem(int [] gasStations, int [] costs){
+        int totalSumGasStations=0, totalSumCost=0;
+        for(int i=0;i<gasStations.length;i++){
+            totalSumGasStations+= gasStations[i];
+            totalSumCost+= costs[i];
+            if(totalSumGasStations<totalSumCost){
+                return false;
+            }
+        }
+        return true;
+    }
+    private static  int findDiameterSymmetric(int [] weights){
+        return MAX(findDiameterGreedy(weights,true,false),Sum(weights,0,weights.length-1)-findDiameterGreedy(weights,false,false));
+    }
+    private static int findDiameterCircledGraphFullSearch(int [] weights){
+        int sum = 0, maxSum = 0, numOfEdges=0,count;
+        for (int i = 0; i < weights.length; i++) {
+            int j=i;
+            count=0;
+            while(count!=weights.length) {
+                sum = SumCircle(weights, i, j);
+                if (sum > maxSum) {
+                    maxSum = sum;
+                    numOfEdges = Math.abs(i - j) + 1;
+
+
+                }
+                j++;
+                count++;
+
+            }
+
+            }
+        System.out.println("The diameter is " + maxSum + " and in num of edges :" + numOfEdges);
+        return maxSum;
+    }
+    private static int findDiameterGreedy(int[] weights,boolean isPositiveSum,boolean isDuplicate) {
+        int current = 0, max = 0 , numOfEdges=0;
+
+        // if we want the smallest sum instead of highest
+        if(!isPositiveSum){
+            changeSign(weights);
+        }
+
+        for (int i = 0; i < weights.length; i++) {
+
+
+            current += weights[i];
+            numOfEdges++;
+            if (current < 0) {
+                current = 0;
+                numOfEdges=0;
+                continue;
+            }
+
+            if (current > max) {
+                max = current;
+
+            }
+
+
+
+        }
+        if(!isPositiveSum){
+            max*=-1;
+        }
+       // System.out.println("The diameter is " + max + " and in num of edges :" + numOfEdges);
+
+        return max;
+    }
+
+    private static void changeSign(int[] weights) {
+       for(int i=0;i<weights.length;i++){
+           weights[i]*=-1;
+       }
+    }
+
+    private static int findDiameterDynamic(int[] weights) {
+        int i, j, max = 0, numOfEdges = 0;
+        int dynamicMat[][] = new int[weights.length][weights.length];
         // now putting the values from the weights arr into the diagonal O(n)
-        for(i=0;i<weights.length;i++){
-            dynamicMat[i][i]=weights[i];
+        for (i = 0; i < weights.length; i++) {
+            dynamicMat[i][i] = weights[i];
             // starting looking for max from now
-            if(weights[i]>max){
+            if (weights[i] > max) {
                 max = weights[i];
                 numOfEdges = 1;
             }
         }
-
+        //long startTime = System.nanoTime();
+        long start = System.currentTimeMillis();
         // now first algorithm  mat[i,j] = mat[i,j-1] +mat [j,j] O(n**2)
-        for(i=0;i<dynamicMat.length-1;i++){
-            for(j=i+1;j<dynamicMat[i].length;j++){
-                dynamicMat[i][j] = dynamicMat[i][j-1] + dynamicMat[j][j];
-                if(dynamicMat[i][j]>max){
-                    max =dynamicMat[i][j];
-                    numOfEdges = Math.abs(i-j)+1;
+        for (i = 0; i < dynamicMat.length - 1; i++) {
+            for (j = i + 1; j < dynamicMat[i].length; j++) {
+                dynamicMat[i][j] = dynamicMat[i][j - 1] + dynamicMat[j][j];
+                if (dynamicMat[i][j] > max) {
+                    max = dynamicMat[i][j];
+                    numOfEdges = Math.abs(i - j) + 1;
+                }
+            }
+        }
+        //long endTime   = System.nanoTime();
+        long end = System.currentTimeMillis();
+
+        System.out.println("The diameter is " + max + " and in num of edges :" + numOfEdges);
+        System.out.println(end - start);
+        // now second algorithm  mat[i,j] = mat[i-1,j] +mat [i,i] O(n**2)
+
+        for (i = 1; i < dynamicMat.length; i++) {
+            for (j = 0; j < i; j++) {
+                dynamicMat[i][j] = dynamicMat[i - 1][j] + dynamicMat[i][i];
+                if (dynamicMat[i][j] > max) {
+                    max = dynamicMat[i][j];
+                    numOfEdges = Math.abs(i - j) + 1;
                 }
             }
         }
         System.out.println("The diameter is " + max + " and in num of edges :" + numOfEdges);
-        return  max;
+
+        // now third algorithm  mat[i,j] = mat[i-1,j] + weights[i] O(n**2)
+
+        for (i = 1; i < dynamicMat.length; i++) {
+            for (j = 0; j < i; j++) {
+                dynamicMat[i][j] = dynamicMat[i - 1][j] + weights[i];
+                if (dynamicMat[i][j] > max) {
+                    max = dynamicMat[i][j];
+                    numOfEdges = Math.abs(i - j) + 1;
+                }
+            }
+        }
+
+        System.out.println("The diameter is " + max + " and in num of edges :" + numOfEdges);
+
+
+        // now forth algorithm  mat[i,j] = mat[i,j-1] +weights[j] O(n**2)
+        for (i = 0; i < dynamicMat.length - 1; i++) {
+            for (j = i + 1; j < dynamicMat[i].length; j++) {
+                dynamicMat[i][j] = dynamicMat[i][j - 1] + weights[j];
+                if (dynamicMat[i][j] > max) {
+                    max = dynamicMat[i][j];
+                    numOfEdges = Math.abs(i - j) + 1;
+                }
+            }
+        }
+        System.out.println("The diameter is " + max + " and in num of edges :" + numOfEdges);
+
+        return max;
     }
-    private static int findDiameterFullSearch(int [] weights){
-        int sum=0,maxSum=0,numOfEdges=0;
-        for(int i=0;i<weights.length;i++){
-            for(int j=i;j<weights.length;j++){
-                sum = Sum(weights,i,j);
-                if(sum>maxSum){
-                    maxSum=sum;
-                    numOfEdges = Math.abs(i-j)+1;
+
+    private static int findDiameterFullSearch(int[] weights) {
+        int sum = 0, maxSum = 0, numOfEdges = 0;
+        for (int i = 0; i < weights.length; i++) {
+            for (int j = i; j < weights.length; j++) {
+                sum = Sum(weights, i, j);
+                if (sum > maxSum) {
+                    maxSum = sum;
+                    numOfEdges = Math.abs(i - j) + 1;
                 }
 
             }
@@ -225,13 +408,30 @@ public class BottlesProblem {
         System.out.println("The diameter is " + maxSum + " and in num of edges :" + numOfEdges);
         return maxSum;
     }
-    private static int Sum(int [] arr,int i,int j){
-        int sum=0;
-        for(int k=i;k<=j;k++){
-            sum+=arr[k];
+
+    private static int Sum(int[] arr, int i, int j) {
+        int sum = 0;
+        for (int k = i; k <= j; k++) {
+            sum += arr[k];
         }
         return sum;
     }
+
+    private static int SumCircle(int[] arr, int i, int j) {
+        int sum = 0;
+        int subArr = Math.abs(i-j)+1;
+        while(subArr>0) {
+            if(i>arr.length-1){
+                i=0;
+            }
+            sum+=arr[i];
+            i++;
+            subArr--;
+        }
+
+        return sum;
+    }
+
     private static Integer[][] findCheapestWayVertex(Integer[][] mat, int[] arr) {
         // step 1: convert the weights on vertexes to weights on edges. O(n**2)
         int i, j;
@@ -446,6 +646,10 @@ public class BottlesProblem {
         return i < n ? i : n;
     }
 
+    private static int MAX(int i, int n) { // max method.
+        return i > n ? i : n;
+    }
+
     private static <T> void printAll(T[][] t) {
         for (int i = 0; i < t.length; i++) {
             for (int j = 0; j < t.length; j++) {
@@ -535,10 +739,7 @@ public class BottlesProblem {
         }
 
 
-
         PriorityQueue<Integer> pQueue = new PriorityQueue();
-
-
 
 
         // creating arr of ways from v1 to each vertex on graph.
