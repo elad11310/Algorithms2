@@ -2,6 +2,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.Arrays;
 import java.util.PriorityQueue;
 import java.util.Scanner;
 
@@ -91,13 +92,17 @@ import java.util.Scanner;
  * [i,i].......[i,n][i,0]....[i,i-1]
  * findDiameterCircledGraphFullSearch - O(n**2) to find all sub arr and multiply by another O(n) to sum all the numbers in the current sub arr so total O(n**3).
  *
- *  another algorithm (best for my opinion) to duplicate the arr and to use findDiameterGreedy(O(n)) but with a restriction to search for parts that are no longer then
- *  the size of the original arr. duplicateArrFindDiameter total: O(n)
+ *  another algorithm ( to duplicate the arr and to use findDiameterGreedy(O(n)) on "different arr " each time but with a restriction to search for parts that are no longer then
+ *  the size of the original arr. duplicateArrFindDiameter total: O(n**2)
  *
  *
  *  another algorithm is based on symmetric that as follow : Diameter = Max(best(A) , sum(A) -- best(-A)) -- will be +. O(n)
  *  findDiameterSymmetric
  *
+ *
+ *  another algorithm is dynamic programming  -  open matrix - putting in the diagonal the arr values based on the dynamic programming we did before
+ *  when we didnt search in circled arr , but in normal . now for circled arr we need to fill the left down diagonal , we will sum all the sequence and do the following:
+ *  sum(arr) -[2,2] = [3,1] , sum(arr) - [2,3] = [4,1] for an instance. k=j+1 , p=(i+j)-k
  *
  * new subject - gas station problem. we have a circle with points. each point is a gas station where we can fill gas.
  * now we want to check if we can start from a certain point and close a circle. between point to point we have a cost.
@@ -106,6 +111,21 @@ import java.util.Scanner;
  * a1>b1 and then a1+a2>b1+b2 and .... why not to make sum of first array(Gas statiosn) and sum of second array(costs) and then to see if sum(a) > sum(b)?
  * because the total sum might be greater but in the way we might have a course where the fuel we have at the moment is not enough to get from ai to ai+1.
  * gasStationProblem
+ *
+ * now we want to know if any point exists which i can finish a circle when i start driving from it.
+ * we will convert the problem to find longest sub sequence in circle arr , how? we take arr A which represents the gas stations , we will take arr B
+ * which represents the cost from gas to another and we will subtract b from a into new arr C.
+ * now we will execute on c the  symmetric algorithm that finds the biggest sequence in circle in O(n), we will save the starting index of the biggest sub sequence
+ * (saving index from best(A) , and saving from sum(A) - -best(-A)
+ * and that's will be the index of the gas station that we can make a circle from it.
+ * gasStationProblemConverted
+ *
+ *
+ * now we gonna find biggest sub sequence in a matrix. we will see 4 methods:
+ * 1) full search O(n**6)
+ * 2) algorithm with an helper arr in O(n**4) - by taking all possible lines , adding them to 1 arr and sent it to Best
+ * 3) algorithm with an helper matrix (dynamic programming) O(n**4)
+ * 4) superBest - we take algo's number 2 and 3 and improve them to O(n**3)
  */
 
 
@@ -136,10 +156,12 @@ public class BottlesProblem {
     public static void main(String[] args) {
 
 
+        int mat [][] = {{2,1,-3,-4,5},{0,6,3,4,1},{2,-2,-1,4,-5},{-3,3,1,0,3}};
+       // System.out.println(findSubSeqMatrixFullSearch(mat));
+        //System.out.println(findSubSeqMatrixCreateLines(mat));
+        System.out.println(findSubSeqMatrixDynamic(mat));
 
-        int arr1[] =  {12,1,3,3,4,8};
-        int arr2 [] ={6,4,2,9,3,5};
-        System.out.println(gasStationProblem(arr1,arr2));
+
 
         //        Integer mat[][] = {{1, 10000, 1, 1, 10000, 10000},
 //                {1, 1, 1, 1, 1, 10000},
@@ -226,8 +248,130 @@ public class BottlesProblem {
 
     }
 
+    private static int  findSubSeqMatrixCreateLines(int [][] matrix){
+        int sum=0,max=0,ind=0,length=0;
+        int startX=0,startY=0,endX=0,endY=0;
+        // creating a helper arr
+        int arr [] = new int[matrix[0].length];
+        // n**2 for creating all possible linge
+        for(int i=0;i<matrix.length;i++){
+            for(int j=i;j<matrix.length;j++){
+                // another n**2 for summing the lines
+                for(int x=i;x<=j;x++){
+                    for(int y=0;y<matrix[0].length;y++){
+                        arr[y]+=matrix[x][y];
+                    }
+                }
+                // o**m for best algo
+                int ans [] = findDiameterGreedy(arr);
+                sum = ans[2]; // the value best returns
+                ind =ans[0]; // the first index of the longest sub sequence
+                length = ans[1]; // the length of the sequence
+                if(sum>max){
+                    max=sum;
+                    startX=i;
+                    startY=ind;
+                    endY = j;
+                    endX= length-1+ind;
 
+                }
+                zeroingArr(arr);
+            }
+        }
+        // if n==m so total is n**4 + O(n) for best and O(n) for zeroing arr. sp O(n**4)
+        System.out.println("Starting indices : " + startX +" "+  startY + " Ending indices: " + endY + " " + endX);
+        return max;
+    }
+    private static int findSubSeqMatrixDynamic(int [][] matrix) {
+        int i, j, k, l, sum = 0, max = 0, startX = 0, startY = 0, endX = 0, endY = 0;
+        // first we create a helper matrix.
+        int[][] helpMat = new int[matrix.length][matrix[0].length];
+
+
+        // putting the first variable so we have a variable to relay on when we sum first row and first col
+        helpMat[0][0] = matrix[0][0];
+        // first, we fill the first row and the first col with the sum of the current place + the previous sum till this point.(just summing row and col) O(n)
+
+        for (i = 1; i < helpMat[0].length; i++) {
+            helpMat[0][i] = helpMat[0][i- 1]  + matrix[0][i];
+        }
+        for (i = 1; i < helpMat.length; i++) {
+            helpMat[i][0] = helpMat[i - 1][0] + matrix[i][0];
+        }
+
+
+        // now go through the helper mat and from each point we calculate the sum from 0,0 to this point, based on previous calculations. O(n**2)
+
+        for (i = 1; i < helpMat.length; i++) {
+            for (j = 1; j < helpMat[0].length; j++) {
+                helpMat[i][j] = matrix[i][j] + helpMat[i][j - 1] + helpMat[i - 1][j] - helpMat[i - 1][j - 1];
+            }
+        }
+
+
+        // now we we have in helpMatrix in each point the value of the rectangle from 0,0 to this point , we can calculate now sub rectangles O(N**4)(if n==m)
+
+        for (i = 1; i < helpMat.length; i++) {
+            for (j = 1; j < helpMat[0].length; j++) {
+                for (k = i; k < helpMat.length; k++) {
+                    for (l = j; l < helpMat[0].length; l++) {
+                        sum = helpMat[k][l] - helpMat[k][j - 1] - helpMat[i - 1][l] + helpMat[i - 1][j - 1];
+                        if (sum > max) {
+                            max = sum;
+                            startX = i;
+                            startY = j;
+                            endX = l;
+                            endY = k;
+                        }
+                    }
+                }
+            }
+
+        }
+        System.out.println("Starting indices : " + startX +" , " + startY +" Ending indices: " + endX + " , " + endY);
+        return max;
+    }
+    private static void zeroingArr(int[] arr) {
+        for(int i=0;i<arr.length;i++){
+            arr[i]=0;
+        }
+    }
+    private static int findSubSeqMatrixFullSearch(int [][] matrix){
+        // this algorithm creates all possible options for sub sequence in matrix , checks which is the largest, returns its number and start,end indices.
+        int startX=0,startY=0,endX=0,endY=0;
+        int sum=0,max=0;
+
+        // calculating indices for up left corner of the rectangle.
+        for(int i=0;i<matrix.length;i++){
+            for(int j=0;j<matrix[i].length;j++){
+                // calculating indices for down right corner of the rectangle.
+                for(int k=i;k<matrix.length;k++){
+                    for(int l=j;l<matrix[k].length;l++){
+                        // summing the current rectangle
+                        for(int x=i;x<=k;x++){
+                            for (int y=j;y<=l;y++){
+                                sum+=matrix[x][y];
+                            }
+
+                        }
+                        if(sum>max){
+                            max=sum;
+                            startX=i;
+                            startY=j;
+                            endX=k;
+                            endY=l;
+                        }
+                        sum=0;
+                    }
+                }
+            }
+        }
+        System.out.println("Starting indices : " + startX +" , " + startY +" Ending indices: " + endX + " , " + endY);
+        return  max;
+
+    }
     private static int duplicateArrFindDiameter(int [] weights){
+        int max=0;
         int newArr[] = new int [weights.length*2];
         int j=0;
         // duplicate the original arr to the new arr
@@ -238,12 +382,26 @@ public class BottlesProblem {
             newArr[i]=weights[j];
             j++;
         }
+        for(int i=0;i<weights.length;i++) {
+            int ans = findDiameterGreedy(newArr,i,i+weights.length-1);
+            if(max<ans){
+                max=ans;
+            }
+        }
+        return  max;
 
-        int ans = findDiameterGreedy(newArr,true,true);
-        return  1;
+    }
+    private static boolean gasStationProblemConverted(int [] gasStations, int [] costs){
+        int convertedArr [] = new int[gasStations.length]; // creating new arr in size of both of the arr's
+        for(int i=0;i<convertedArr.length;i++){ // filling it by subtracting from gasStations arr the costs arr.
+            convertedArr[i]= gasStations[i]-costs[i];
+        }
+        // now we gonna use findDiameterSymmetric if the result is 0 or beneth there is no any point on the circle we can complete a full circle from it.
+        // if now we gonna the the max from (Best(convertedArr), sum(convertedArr) - - Best(-convertedArr). and the starting index is from the algorithm which returns the max value.
+        // didnt understand how to calculate the starting index of the  sum(convertedArr) - - Best(-convertedArr).
 
-    } /// suspended for now
-
+        return true;
+    }
     private static boolean gasStationProblem(int [] gasStations, int [] costs){
         int totalSumGasStations=0, totalSumCost=0;
         for(int i=0;i<gasStations.length;i++){
@@ -256,7 +414,7 @@ public class BottlesProblem {
         return true;
     }
     private static  int findDiameterSymmetric(int [] weights){
-        return MAX(findDiameterGreedy(weights,true,false),Sum(weights,0,weights.length-1)-findDiameterGreedy(weights,false,false));
+        return MAX(findDiameterGreedy(weights,true),Sum(weights,0,weights.length-1)-findDiameterGreedy(weights,false));
     }
     private static int findDiameterCircledGraphFullSearch(int [] weights){
         int sum = 0, maxSum = 0, numOfEdges=0,count;
@@ -280,8 +438,33 @@ public class BottlesProblem {
         System.out.println("The diameter is " + maxSum + " and in num of edges :" + numOfEdges);
         return maxSum;
     }
-    private static int findDiameterGreedy(int[] weights,boolean isPositiveSum,boolean isDuplicate) {
-        int current = 0, max = 0 , numOfEdges=0;
+    private static int findDiameterGreedy(int[] weights,int i,int j) {
+        int current = 0,  max = weights[0] , firstIndex=0,lastIndex=0,potentialIndex=0;
+        for (int k = i; k <= j; k++) {
+
+            current += weights[k];
+
+
+            if (current > max) {
+                max = current;
+                lastIndex=i;
+                firstIndex=potentialIndex;
+
+            }
+            if (current < 0) {// if we want longest number of edges we do current<0 , if we want shortest num of edges we do current<=0
+                current = 0;
+                potentialIndex=i+1;
+                continue;
+            }
+
+
+        }
+        lastIndex = lastIndex- firstIndex+1;  // setting the length of the edges that connected for the diameter
+        //System.out.println("The diameter is " + max + " and in num of edges :" + lastIndex);
+        return max;
+    }
+    private static int findDiameterGreedy(int[] weights,boolean isPositiveSum) {
+        int current = 0, max = weights[0] , firstIndex=0,lastIndex=0,potentialIndex=0;
 
         // if we want the smallest sum instead of highest
         if(!isPositiveSum){
@@ -292,17 +475,20 @@ public class BottlesProblem {
 
 
             current += weights[i];
-            numOfEdges++;
-            if (current < 0) {
-                current = 0;
-                numOfEdges=0;
-                continue;
-            }
 
             if (current > max) {
                 max = current;
-
+                lastIndex=i;
+                firstIndex=potentialIndex;
             }
+
+            if (current <= 0) { // if we want longest number of edges we do current<0 , if we want shortest num of edges we do current<=0
+                current = 0;
+                potentialIndex=i+1;
+                continue;
+            }
+
+
 
 
 
@@ -310,17 +496,91 @@ public class BottlesProblem {
         if(!isPositiveSum){
             max*=-1;
         }
-       // System.out.println("The diameter is " + max + " and in num of edges :" + numOfEdges);
+        lastIndex = lastIndex- firstIndex+1;  // setting the length of the edges that connected for the diameter
+        System.out.println("The diameter is " + max + " and in num of edges :" + lastIndex);
 
         return max;
     }
+    private static int [] findDiameterGreedy(int[] weights){
+        int [] arr = new int[3];
+        int current = 0, max = weights[0] , firstIndex=0,lastIndex=0,potentialIndex=0;
 
+
+        for (int i = 0; i < weights.length; i++) {
+
+
+            current += weights[i];
+
+            if (current > max) {
+                max = current;
+                lastIndex=i;
+                firstIndex=potentialIndex;
+            }
+
+            if (current <= 0) { // if we want longest number of edges we do current<0 , if we want shortest num of edges we do current<=0
+                current = 0;
+                potentialIndex=i+1;
+            }
+
+
+
+
+
+        }
+
+        lastIndex = lastIndex- firstIndex+1;  // setting the length of the edges that connected for the diameter
+        arr[0]= firstIndex;
+        arr[1] = lastIndex;
+        arr[2] = max;
+        return arr;
+    }
     private static void changeSign(int[] weights) {
        for(int i=0;i<weights.length;i++){
            weights[i]*=-1;
        }
     }
+    private static int findDiameterDynamicCircled(int [] weights){
+        // first , we use the dynamic programming which handles in a normal graph diameter , which means filling the up right triangle.
+        int i, j, max = 0, numOfEdges = 0;
+        int sum = Sum(weights,0,weights.length-1);
+        int mat [][] = new int[weights.length][weights.length];
+        // now putting the values from the weights arr into the diagonal O(n)
+        for (i = 0; i < weights.length; i++) {
+            mat[i][i] = weights[i];
+            // starting looking for max from now
+            if (weights[i] > max) {
+                max = weights[i];
+                numOfEdges = 1;
+            }
+        }
+        // now first algorithm  mat[i,j] = mat[i,j-1] +mat [j,j] O(n**2)
+        for (i = 0; i < mat.length - 1; i++) {
+            for (j = i + 1; j < mat[i].length; j++) {
+                mat[i][j] = mat[i][j - 1] + mat[j][j];
+                if (mat[i][j] > max) {
+                    max = mat[i][j];
+                    numOfEdges = Math.abs(i - j) + 1;
+                }
+            }
+        }
 
+
+        // now by using the filled up right  triangle of the matrix, we gonna fill the left down triangle which the max there - its make sequence in the circled arr
+
+        for(i=1;i<mat.length;i++){
+            for(j=0;j<i;j++){
+                int k = j+1;
+                int p = (i+j)-k;
+                mat[i][j]= sum - mat[k][p];
+                if(mat[i][j]>max){
+                    max=mat[i][j];
+                    numOfEdges = weights.length-i+j+1;
+                }
+            }
+        }
+        System.out.println("The diameter is " + max + " and in num of edges :" + numOfEdges);
+        return max;
+    }
     private static int findDiameterDynamic(int[] weights) {
         int i, j, max = 0, numOfEdges = 0;
         int dynamicMat[][] = new int[weights.length][weights.length];
@@ -392,7 +652,6 @@ public class BottlesProblem {
 
         return max;
     }
-
     private static int findDiameterFullSearch(int[] weights) {
         int sum = 0, maxSum = 0, numOfEdges = 0;
         for (int i = 0; i < weights.length; i++) {
@@ -408,7 +667,6 @@ public class BottlesProblem {
         System.out.println("The diameter is " + maxSum + " and in num of edges :" + numOfEdges);
         return maxSum;
     }
-
     private static int Sum(int[] arr, int i, int j) {
         int sum = 0;
         for (int k = i; k <= j; k++) {
@@ -416,7 +674,6 @@ public class BottlesProblem {
         }
         return sum;
     }
-
     private static int SumCircle(int[] arr, int i, int j) {
         int sum = 0;
         int subArr = Math.abs(i-j)+1;
@@ -431,7 +688,6 @@ public class BottlesProblem {
 
         return sum;
     }
-
     private static Integer[][] findCheapestWayVertex(Integer[][] mat, int[] arr) {
         // step 1: convert the weights on vertexes to weights on edges. O(n**2)
         int i, j;
@@ -471,7 +727,6 @@ public class BottlesProblem {
         // total complexity : O(n**2) + O(n**3) + O(n**2) = O(n**3)
         return mat;
     }
-
     private static int numOfConnectingComponents(Boolean[][] mat) {
         String ans = "{"; // for printing each connection component.
         int i, j;
@@ -515,7 +770,6 @@ public class BottlesProblem {
 
         return 0;
     }
-
     private static String printCourse(Boolean[][] mat, int i, int j, boolean form) {
         String ans = "";
         if (mat[i][j]) { // if there is a way
@@ -536,7 +790,6 @@ public class BottlesProblem {
         ans = ans.substring(0, ans.length() - 4); // cut last ->
         return ans;
     }
-
     private static boolean isConnected(Boolean[][] mat) {
         for (int i = 0; i < size; i++) {
             if (!mat[0][i]) {
@@ -545,7 +798,6 @@ public class BottlesProblem {
         }
         return true;
     }
-
     private static Boolean[][] findWaysFW(Boolean[][] checkConnections) {
         int p, l, g, q;
         // making a helping mat.
@@ -586,7 +838,6 @@ public class BottlesProblem {
         }
         return checkConnections;
     }
-
     private static Boolean[][] bottlesProblem() {
 
         Boolean[][] mat = new Boolean[size][size];
@@ -598,7 +849,6 @@ public class BottlesProblem {
 
         return mat;
     }
-
     private static Integer[][] bottlesProblemCheapestWay() {
 
         Integer[][] mat = new Integer[size][size];
@@ -610,7 +860,6 @@ public class BottlesProblem {
 
         return mat;
     }
-
     private static boolean checkNeighbours(int i, int j) {
 
         // k ,p are ordered pair of i
@@ -641,15 +890,12 @@ public class BottlesProblem {
 
         return false;
     }
-
     private static int MIN(int i, int n) { // min method.
         return i < n ? i : n;
     }
-
     private static int MAX(int i, int n) { // max method.
         return i > n ? i : n;
     }
-
     private static <T> void printAll(T[][] t) {
         for (int i = 0; i < t.length; i++) {
             for (int j = 0; j < t.length; j++) {
@@ -658,7 +904,6 @@ public class BottlesProblem {
             System.out.println();
         }
     }
-
     private static <T> void deepCopy(T[][] from, T[][] to) {
 
         for (int i = 0; i < from.length; i++) {
@@ -668,7 +913,6 @@ public class BottlesProblem {
 
         }
     }
-
     private static Integer[][] findCheapestWay(Integer mat[][], boolean form) {
         int p, l, g, q;
         Integer newMat[][] = new Integer[mat.length][mat.length];
@@ -712,7 +956,6 @@ public class BottlesProblem {
         }
         return mat;
     }
-
     private static Node[] Dijkstra(int v1) throws FileNotFoundException {
         int count = 0, current, min = 10000000;
         // first reading data from file
@@ -784,7 +1027,6 @@ public class BottlesProblem {
         return courses;
 
     }
-
     private static int findMin(Node[] courses) {
         // this function returns the minimum cost node to continue with the dijkstra algorithm
         int min = 10000;
