@@ -7,7 +7,8 @@ import java.util.PriorityQueue;
 import java.util.Scanner;
 
 /**
- * this class represents bottles problem which converted to a graph
+ * this class represents algorithms 2 course in ariel university:
+ * bottles problem which converted to a graph :
  * description : for instance we have bottle A with 5 litters and a bottle B with 3 litters we want to get the situation :
  * bottle A with 4 litters.
  * we can do the following: empty A or B, fill to the max A or B , or moving from A to B some litters.
@@ -126,6 +127,10 @@ import java.util.Scanner;
  * 2) algorithm with an helper arr in O(n**4) - by taking all possible lines , adding them to 1 arr and sent it to Best
  * 3) algorithm with an helper matrix (dynamic programming) O(n**4)
  * 4) superBest - we take algo's number 2 and 3 and improve them to O(n**3)
+ * first we check which one is larger n or m. if m so it will be O(m**2*n) and if me is smaller so O(n**2*m).
+ * we take every iteration 1 col or 1 row (depends on m or n) and then we send it to best - saving index start of best and end and i,j(rectangle)
+ * next iteration we are not zeroing the arr yet we add the next row/col on it and then again send to best.
+ * when i grow by one we will zero the arr and then it all begins again, at the end we will have the rectangle with the largest sum in the matrix in O(n**3) if n==m.
  */
 
 
@@ -156,10 +161,15 @@ public class BottlesProblem {
     public static void main(String[] args) {
 
 
-        int mat [][] = {{2,1,-3,-4,5},{0,6,3,4,1},{2,-2,-1,4,-5},{-3,3,1,0,3}};
-       // System.out.println(findSubSeqMatrixFullSearch(mat));
-        //System.out.println(findSubSeqMatrixCreateLines(mat));
-        System.out.println(findSubSeqMatrixDynamic(mat));
+        int mat [][] = {{2,1,-3,-4,5},{7,-4,7,2,4},{0,6,3,4,1},{-3,3,1,0,3}};
+        int mat2 [][] = {{9,5,-2,5,-8},{7,-4,7,2,4},{-1,7,2,1,-6},{-3,3,-1,0,1}};
+        int mat3 [][] = {{-2,5,1,-8,-3},{4,-100,10,-3,1},{-10,7,7,5,-2},{1,5,-20,3,-5}};
+        int mat4 [][] = {{-2,-5,-1,-8,-3},{4,100,-10,-3,-1},{10,7,-7,-5,-2},{-1,-5,-20,-3,-5}};
+        int mat5 [][] = {{-2,-5,-1,-8,-3},{4,100,10,3,1},{10,7,7,5,2},{1,5,20,3,5}};
+        System.out.println(findSubSeqMatrixFullSearch(mat5));
+        System.out.println(findSubSeqMatrixCreateLines(mat5));
+        System.out.println(findSubSeqMatrixDynamic(mat5));
+        System.out.println(findSubSeqMatrixSuperBest(mat5));
 
 
 
@@ -247,7 +257,64 @@ public class BottlesProblem {
 //        System.out.println("Num of connecting component : " + numOfConnectingComponents(checkConnections));
 
     }
+    private static int  findSubSeqMatrixSuperBest(int [][] matrix){
+        int endY=0,endX=0,startI=0,startJ=0,i,j,k,sum=0,max=0;
+        // checking who is larger m/n
+        int n = matrix.length,m = matrix[0].length;
 
+        //O(m**2*n)
+        if(m>n){
+            int [] helpArr = new int[matrix.length];
+            for(i=0;i<matrix[0].length;i++){
+                // zeroing the arr
+                zeroingArr(helpArr);
+                for(j=i;j<matrix[0].length;j++){
+                    for(k=0;k<matrix.length;k++){
+                        helpArr[k]+=matrix[k][j];
+                    }
+                    int [] ans =findDiameterGreedy(helpArr);
+                    sum=ans[2];
+
+                    if(sum>max){
+                        max=sum;
+                        startI=ans[0];
+                        endY =j;
+                        endX = ans[1]-1+startI;
+                        startJ=i;
+                    }
+                }
+            }
+
+
+
+        }
+        // O(n**2*m)
+        else{
+            int [] helpArr = new int[matrix.length];
+            for(i=0;i<matrix.length;i++) {
+                // zeroing the arr
+                zeroingArr(helpArr);
+                for (j = i; j < matrix.length; j++) {
+                    for (k = 0; k < matrix[0].length; k++) {
+                        helpArr[k] += matrix[j][k];
+                    }
+                    int [] ans =findDiameterGreedy(helpArr);
+                    sum=ans[2];
+
+                    if(sum>max){
+                        max=sum;
+                        startI=ans[0];
+                        endY =j;
+                        endX = ans[1]-1+startI;
+                        startJ=i;
+                    }
+                }
+            }
+
+        }
+        System.out.println("Starting indices : " + startI +" "+  startJ + " Ending indices: " + endX + " " + endY);
+        return max;
+    }
     private static int  findSubSeqMatrixCreateLines(int [][] matrix){
         int sum=0,max=0,ind=0,length=0;
         int startX=0,startY=0,endX=0,endY=0;
@@ -320,14 +387,66 @@ public class BottlesProblem {
                             max = sum;
                             startX = i;
                             startY = j;
-                            endX = l;
-                            endY = k;
+                            endX = k;
+                            endY = l;
                         }
                     }
                 }
             }
 
         }
+
+        // we have some special cases we need to take care of(because we start from 1,1, some recatngles are missing)
+        // so we will do for case (i=-,j=0), (i=0),(j=0)
+
+        // i=0
+
+        for(i=0;i<helpMat.length;i++){
+            for(j=1;j<helpMat[0].length;j++){
+                for(k=0;k<j;k++){
+                    sum = helpMat[i][j]-helpMat[i][k];
+                    if (sum > max) {
+                        max = sum;
+                        startX = 0;
+                        startY = i-j;
+                        endX = i;
+                        endY = j;
+                    }
+                }
+            }
+        }
+
+        //j=0
+
+
+        for(i=1;i<helpMat.length;i++){
+            for(j=0;j<helpMat[0].length;j++){
+                sum=helpMat[i][j] - helpMat[i-i][j];
+                if(sum>max){
+                    max=sum;
+                        startX = 1;
+                        startY = 0;
+                        endX = i;
+                        endY = j;
+                }
+            }
+        }
+
+        // i,j
+
+        for(i=0;i<helpMat.length;i++){
+            for(j=0;j<helpMat[0].length;j++){
+                if(helpMat[i][j]>max){
+                    max = helpMat[i][j];
+                     startX = 0;
+                     startY = 0;
+                     endX = i;
+                     endY = j;
+
+                }
+            }
+        }
+
         System.out.println("Starting indices : " + startX +" , " + startY +" Ending indices: " + endX + " , " + endY);
         return max;
     }
