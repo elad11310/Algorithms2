@@ -82,7 +82,7 @@ public class Isomorphic_Trees {
 
 
     private static String getString(int vertex, int father, ArrayList<ArrayList<Integer>> Tree, String str) {
-
+        // o (v) * (v-1)
 
         for (int i = 0; i < Tree.get(vertex).size(); i++) {
             // if we on a leaf
@@ -129,6 +129,7 @@ public class Isomorphic_Trees {
 
     private static void createGraph() {
 /// tree one
+        // O(v) *(v-1)
         ArrayList<Integer> v0 = new ArrayList<>();
         v0.add(1);
         v0.add(2);
@@ -157,33 +158,6 @@ public class Isomorphic_Trees {
         TreeOne.add(v6);
 
 //        // tree two
-//        ArrayList<Integer> v11 = new ArrayList<>();
-//        v11.add(1);
-//        v11.add(2);
-//        v11.add(3);
-//        TreeTwo.add(v11);
-//        ArrayList<Integer> v12 = new ArrayList<>();
-//        v12.add(0);
-//        v12.add(4);
-//        v12.add(5);
-//        TreeTwo.add(v12);
-//        ArrayList<Integer> v13 = new ArrayList<>();
-//        v13.add(0);
-//        TreeTwo.add(v13);
-//        ArrayList<Integer> v14 = new ArrayList<>();
-//        v14.add(0);
-//        TreeTwo.add(v14);
-//        ArrayList<Integer> v15 = new ArrayList<>();
-//        v15.add(1);
-//        TreeTwo.add(v15);
-//        ArrayList<Integer> v16 = new ArrayList<>();
-//        v16.add(1);
-//        v16.add(6);
-//        TreeTwo.add(v16);
-//        ArrayList<Integer> v17 = new ArrayList<>();
-//        v17.add(5);
-//        TreeTwo.add(v17);
-
         ArrayList<Integer> v11 = new ArrayList<>();
         v11.add(1);
         v11.add(2);
@@ -191,25 +165,52 @@ public class Isomorphic_Trees {
         TreeTwo.add(v11);
         ArrayList<Integer> v12 = new ArrayList<>();
         v12.add(0);
+        v12.add(4);
+        v12.add(5);
         TreeTwo.add(v12);
         ArrayList<Integer> v13 = new ArrayList<>();
         v13.add(0);
-        v13.add(4);
         TreeTwo.add(v13);
         ArrayList<Integer> v14 = new ArrayList<>();
         v14.add(0);
-        v14.add(5);
-        v14.add(6);
         TreeTwo.add(v14);
         ArrayList<Integer> v15 = new ArrayList<>();
-        v15.add(2);
+        v15.add(1);
         TreeTwo.add(v15);
         ArrayList<Integer> v16 = new ArrayList<>();
-        v16.add(3);
+        v16.add(1);
+        v16.add(6);
         TreeTwo.add(v16);
         ArrayList<Integer> v17 = new ArrayList<>();
-        v17.add(3);
+        v17.add(5);
         TreeTwo.add(v17);
+//
+//        ArrayList<Integer> v11 = new ArrayList<>();
+//        v11.add(1);
+//        v11.add(2);
+//        v11.add(3);
+//        TreeTwo.add(v11);
+//        ArrayList<Integer> v12 = new ArrayList<>();
+//        v12.add(0);
+//        TreeTwo.add(v12);
+//        ArrayList<Integer> v13 = new ArrayList<>();
+//        v13.add(0);
+//        v13.add(4);
+//        TreeTwo.add(v13);
+//        ArrayList<Integer> v14 = new ArrayList<>();
+//        v14.add(0);
+//        v14.add(5);
+//        v14.add(6);
+//        TreeTwo.add(v14);
+//        ArrayList<Integer> v15 = new ArrayList<>();
+//        v15.add(2);
+//        TreeTwo.add(v15);
+//        ArrayList<Integer> v16 = new ArrayList<>();
+//        v16.add(3);
+//        TreeTwo.add(v16);
+//        ArrayList<Integer> v17 = new ArrayList<>();
+//        v17.add(3);
+//        TreeTwo.add(v17);
 
 
     }

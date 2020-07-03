@@ -45,14 +45,15 @@ public class Huffman_Encoding {
     public static void main(String[] args) {
 
 
-        Node[] freq = new Node[4];
-        freq[0] = new Node('a', 10);
-        freq[1] = new Node('b', 18);
-        freq[2] = new Node('c', 24);
-        freq[3] = new Node('d', 48);
+        Node[] freq = new Node[5];
+        freq[0] = new Node('a', 5);
+        freq[1] = new Node('b', 6);
+        freq[2] = new Node('c', 11);
+        freq[3] = new Node('d', 12);
+        freq[4] = new Node('e', 66);
 
 
-        // Huffman(freq);
+        Huffman(freq);
         Huffman2();
 
 
@@ -67,11 +68,11 @@ public class Huffman_Encoding {
 
         // we insert all the nodes with the minimum frequency to the queue ( assume its sorted from min to max).
         // because the queue is sorted the poll is in O(1)
-        q1.add(new Node('a', 11));
-        q1.add(new Node('b', 17));
-        q1.add(new Node('c', 20));
-        q1.add(new Node('d', 24));
-        q1.add(new Node('e', 28));
+        q1.add(new Node('a', 5));
+        q1.add(new Node('b', 6));
+        q1.add(new Node('c', 11));
+        q1.add(new Node('d', 12));
+       q1.add(new Node('e', 66));
 
 
         Node father = new Node('0', 0);

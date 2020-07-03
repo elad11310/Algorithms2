@@ -42,7 +42,9 @@ public class BurningAlgorithm {
 
     private static void burningAlgo() {
         // saving the number of vertexes , when we burn we do counter--.
-        int leavesCounter =0,degCounter=degArray.length;
+        int degCounter = degArray.length;
+        // saving the current number of leaves in the queue so we know to do number of burns++ when complete a burn.
+        int leavesCounter = 0;
         int center = 0, numOfBurns = 0;
 
         // now creating our Queue
@@ -54,8 +56,8 @@ public class BurningAlgorithm {
             }
         }
         // saving number of current leaves.
-        leavesCounter=q.size();
-        while (degCounter!=2 &&degCounter!=3) {
+        leavesCounter = q.size();
+        while (degCounter >2) {
 
 
             int v = q.poll();
@@ -72,29 +74,25 @@ public class BurningAlgorithm {
 
 
             }
-            if(leavesCounter==0){
+            if (leavesCounter == 0) {
                 numOfBurns++;
-                leavesCounter=q.size();
+                leavesCounter = q.size();
             }
         }
 
 
-
-
-        if (degCounter == 3) { // 1 center
-            numOfBurns++;
+        if (leavesCounter==1) { // 1 center
+             numOfBurns++;
             System.out.println("Diameter is " + numOfBurns * 2);
             System.out.println("Radius is " + numOfBurns);
-            for (int k = 0; k < degArray.length; k++) {
-                if (degArray[k] == 2) {
-                    center = k;
-                }
-            }
+            // we have left with 2 nodes we know for sure the last in the queue is the center.
+            int stam=q.poll();
+            center = q.poll();
             System.out.println("Center is " + center);
 
-        } else if (degCounter == 2) { // 2 centers.
+        } else if (leavesCounter==2) { // 2 centers.
             System.out.println("Diameter is " + (2 * numOfBurns + 1));
-            System.out.println("Radius is " +(numOfBurns + 1));
+            System.out.println("Radius is " + (numOfBurns + 1));
             System.out.print("Centers are : ");
             for (int k = 0; k < degArray.length; k++) {
                 if (degArray[k] == 1) {
@@ -125,36 +123,36 @@ public class BurningAlgorithm {
     }
 
     private static void createGrapth() {
-        ArrayList<Integer> v0 = new ArrayList<>();
-        v0.add(1);
-        Graph.add(v0);
-        ArrayList<Integer> v1 = new ArrayList<>();
-        v1.add(0);
-        v1.add(2);
-        v1.add(3);
-        Graph.add(v1);
-        ArrayList<Integer> v2 = new ArrayList<>();
-        v2.add(1);
-        Graph.add(v2);
-        ArrayList<Integer> v3 = new ArrayList<>();
-        v3.add(1);
-        v3.add(4);
-        v3.add(5);
-        v3.add(6);
-        Graph.add(v3);
-        ArrayList<Integer> v4 = new ArrayList<>();
-        v4.add(3);
-        Graph.add(v4);
-        ArrayList<Integer> v5 = new ArrayList<>();
-        v5.add(3);
-        Graph.add(v5);
-        ArrayList<Integer> v6 = new ArrayList<>();
-        v6.add(3);
-        v6.add(7);
-        Graph.add(v6);
-        ArrayList<Integer> v7 = new ArrayList<>();
-        v7.add(6);
-        Graph.add(v7);
+//        ArrayList<Integer> v0 = new ArrayList<>();
+//        v0.add(1);
+//        Graph.add(v0);
+//        ArrayList<Integer> v1 = new ArrayList<>();
+//        v1.add(0);
+//        v1.add(2);
+//        v1.add(3);
+//        Graph.add(v1);
+//        ArrayList<Integer> v2 = new ArrayList<>();
+//        v2.add(1);
+//        Graph.add(v2);
+//        ArrayList<Integer> v3 = new ArrayList<>();
+//        v3.add(1);
+//        v3.add(4);
+//        v3.add(5);
+//        v3.add(6);
+//        Graph.add(v3);
+//        ArrayList<Integer> v4 = new ArrayList<>();
+//        v4.add(3);
+//        Graph.add(v4);
+//        ArrayList<Integer> v5 = new ArrayList<>();
+//        v5.add(3);
+//        Graph.add(v5);
+//        ArrayList<Integer> v6 = new ArrayList<>();
+//        v6.add(3);
+//        v6.add(7);
+//        Graph.add(v6);
+//        ArrayList<Integer> v7 = new ArrayList<>();
+//        v7.add(6);
+//        Graph.add(v7);
 //
 //        ArrayList<Integer> v0 = new ArrayList<>();
 //        v0.add(1);
@@ -222,5 +220,126 @@ public class BurningAlgorithm {
 //        ArrayList<Integer> v16 = new ArrayList<>();
 //        v16.add(15);
 //        Graph.add(v16);
+
+
+//        ArrayList<Integer> v0 = new ArrayList<>();
+//        v0.add(3);
+//        Graph.add(v0);
+//        ArrayList<Integer> v1 = new ArrayList<>();
+//        v1.add(2);
+//        Graph.add(v1);
+//        ArrayList<Integer> v2 = new ArrayList<>();
+//        v2.add(1);
+//        v2.add(3);
+//        Graph.add(v2);
+//        ArrayList<Integer> v3 = new ArrayList<>();
+//        v3.add(2);
+//        v3.add(4);
+//        v3.add(0);
+//        Graph.add(v3);
+//        ArrayList<Integer> v4 = new ArrayList<>();
+//        v4.add(3);
+//        v4.add(5);
+//        v4.add(6);
+//        Graph.add(v4);
+//        ArrayList<Integer> v5 = new ArrayList<>();
+//        v5.add(4);
+//        Graph.add(v5);
+//        ArrayList<Integer> v6 = new ArrayList<>();
+//        v6.add(4);
+//        v6.add(7);
+//        Graph.add(v6);
+//        ArrayList<Integer> v7 = new ArrayList<>();
+//        v7.add(6);
+//        v7.add(8);
+//        v7.add(9);
+//        v7.add(10);
+//        Graph.add(v7);
+//        ArrayList<Integer> v8 = new ArrayList<>();
+//        v8.add(7);
+//        Graph.add(v8);
+//        ArrayList<Integer> v9 = new ArrayList<>();
+//        v9.add(7);
+//        Graph.add(v9);
+//        ArrayList<Integer> v10 = new ArrayList<>();
+//        v10.add(7);
+//        Graph.add(v10);
+
+        ArrayList<Integer> v0 = new ArrayList<>();
+        v0.add(3);
+        v0.add(2);
+        v0.add(4);
+        v0.add(1);
+        Graph.add(v0);
+        ArrayList<Integer> v1 = new ArrayList<>();
+        v1.add(0);
+        Graph.add(v1);
+        ArrayList<Integer> v2 = new ArrayList<>();
+        v2.add(0);
+        Graph.add(v2);
+        ArrayList<Integer> v3 = new ArrayList<>();
+        v3.add(0);
+        Graph.add(v3);
+        ArrayList<Integer> v4 = new ArrayList<>();
+        v4.add(0);
+        Graph.add(v4);
+        ArrayList<Integer> v5 = new ArrayList<>();
+        v5.add(19);
+        Graph.add(v5);
+        ArrayList<Integer> v6 = new ArrayList<>();
+        v6.add(19);
+        Graph.add(v6);
+        ArrayList<Integer> v7 = new ArrayList<>();
+        v7.add(19);
+        Graph.add(v7);
+        ArrayList<Integer> v8 = new ArrayList<>();
+        v8.add(19);
+        Graph.add(v8);
+        ArrayList<Integer> v9 = new ArrayList<>();
+        v9.add(10);
+        v9.add(19);
+        Graph.add(v9);
+        ArrayList<Integer> v10 = new ArrayList<>();
+        v10.add(9);
+        Graph.add(v10);
+        ArrayList<Integer> v11 = new ArrayList<>();
+        v11.add(0);
+        v11.add(12);
+        v11.add(13);
+        Graph.add(v11);
+        ArrayList<Integer> v12 = new ArrayList<>();
+        v12.add(11);
+        Graph.add(v12);
+        ArrayList<Integer> v13 = new ArrayList<>();
+        v13.add(11);
+        v13.add(9);
+        v13.add(14);
+        Graph.add(v13);
+        ArrayList<Integer> v14 = new ArrayList<>();
+        v14.add(13);
+        v14.add(15);
+        Graph.add(v14);
+        ArrayList<Integer> v15 = new ArrayList<>();
+        v15.add(14);
+        v15.add(16);
+        Graph.add(v15);
+        ArrayList<Integer> v16 = new ArrayList<>();
+        v16.add(15);
+        v16.add(17);
+        Graph.add(v16);
+        ArrayList<Integer> v17 = new ArrayList<>();
+        v17.add(16);
+        v17.add(18);
+        Graph.add(v17);
+        ArrayList<Integer> v18= new ArrayList<>();
+        v18.add(17);
+        Graph.add(v18);
+        ArrayList<Integer> v19= new ArrayList<>();
+        v19.add(5);
+        v19.add(6);
+        v19.add(7);
+        v19.add(8);
+        Graph.add(v19);
+
     }
 }
